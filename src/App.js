@@ -4,9 +4,13 @@ import { connect } from "./redux/blockchain/blockchainActions";
 import { fetchData } from "./redux/data/dataActions";
 import * as s from "./styles/globalStyles";
 import styled from "styled-components";
+const keccak256 = require("keccak256");
+const { MerkleTree } = require("merkletreejs");
 
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
+
+const addresses = ["0x9A6Aa615aeA32d6Cf70849fda9683Bc01f40f08E"];
 
 export const StyledButton = styled.button`
   padding: 10px;
@@ -120,37 +124,125 @@ function App() {
     SHOW_BACKGROUND: false,
   });
 
-  const claimNFTs = () => {
-    let cost = CONFIG.WEI_COST;
+  const claimNFTs = async () => {
+    const leaf = addresses.map(addr => keccak256(addr));
+    const Merkletree = new MerkleTree(leaf, keccak256, { sortPairs: true });
+
+    const rootHash = Merkletree.getRoot();
+    const adddd = keccak256(blockchain.account);
+
+    const proof = Merkletree.getHexProof(adddd);
+
+    console.log(Merkletree.toString());
+
+    let publicCost = await blockchain.smartContract.methods.publicCost().call();
+    let whitelistCost = await blockchain.smartContract.methods.whitelistCost().call();
     let gasLimit = CONFIG.GAS_LIMIT;
-    let totalCostWei = String(cost * mintAmount);
+    let totalCostWei;
     let totalGasLimit = String(gasLimit * mintAmount);
-    console.log("Cost: ", totalCostWei);
     console.log("Gas limit: ", totalGasLimit);
     setFeedback(`Minting your ${CONFIG.NFT_NAME}...`);
     setClaimingNft(true);
-    blockchain.smartContract.methods
-      .mint(blockchain.account, mintAmount)
-      .send({
-        gasLimit: String(totalGasLimit),
-        to: CONFIG.CONTRACT_ADDRESS,
-        from: blockchain.account,
-        value: totalCostWei,
-      })
-      .once("error", (err) => {
-        console.log(err);
-        setFeedback("Sorry, something went wrong please try again later.");
-        setClaimingNft(false);
-      })
-      .then((receipt) => {
-        console.log(receipt);
-        setFeedback(
-          `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
-        );
-        setClaimingNft(false);
-        dispatch(fetchData(blockchain.account));
-      });
+    let whitlistStatus = await blockchain.smartContract.methods.whitelistEnabled().call();
+    if (whitlistStatus === false) {
+      totalCostWei = String(publicCost * mintAmount);
+      await blockchain.smartContract.methods
+        .mint(mintAmount)
+        .call({
+          gasLimit: String(totalGasLimit),
+          to: CONFIG.CONTRACT_ADDRESS,
+          from: blockchain.account,
+          value: totalCostWei,
+        }).then((receipt) => {
+          console.log(receipt);
+          publicMint();
+          setClaimingNft(false);
+          dispatch(fetchData(blockchain.account));
+        })
+        .catch((error) => {
+          if (error.code === -32603) {
+            setFeedback(error.data.message.slice(20));
+          } else if (error.code === -32000) {
+            setFeedback("Insufficient Funds.");
+          } else if (error.code === 4001) {
+            setFeedback("Mint Canceled , Please Try Again.");
+          } else {
+            setFeedback("Something Went Wrong , Please Try Again.");
+          }
+          setClaimingNft(false);
+        });
+    } else if (whitlistStatus === true) {
+      totalCostWei = String(whitelistCost * mintAmount);
+      await blockchain.smartContract.methods
+        .whitelistMint(mintAmount, proof)
+        .call({
+          gasLimit: String(totalGasLimit),
+          to: CONFIG.CONTRACT_ADDRESS,
+          from: blockchain.account,
+          value: totalCostWei,
+        }).then((receipt) => {
+          console.log(receipt);
+          whitelistMint();
+          setClaimingNft(false);
+          dispatch(fetchData(blockchain.account));
+        })
+        .catch((error) => {
+          console.log(error);
+          if (error.code === -32603) {
+            setFeedback(error.data.message.slice(20));
+          } else if (error.code === -32000) {
+            setFeedback("Insufficient Funds.");
+          } else if (error.code === 4001) {
+            setFeedback("Mint Canceled , Please Try Again.");
+          } else {
+            setFeedback("Something Went Wrong , Please Try Again.");
+          }
+          setClaimingNft(false);
+        });
+    }
   };
+
+  async function publicMint() {
+    let publicCost = await blockchain.smartContract.methods.publicCost().call();
+    let gasLimit = CONFIG.GAS_LIMIT;
+    let totalGasLimit = String(gasLimit * mintAmount);
+    let totalCostWei = String(publicCost * mintAmount);
+    await blockchain.smartContract.methods.mint(mintAmount).send({
+      gasLimit: String(totalGasLimit),
+      to: CONFIG.CONTRACT_ADDRESS,
+      from: blockchain.account,
+      value: totalCostWei,
+    });
+
+
+    setFeedback(
+      `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
+    );
+  }
+
+  async function whitelistMint() {
+    const leaf = addresses.map(addr => keccak256(addr));
+    const Merkletree = new MerkleTree(leaf, keccak256, { sortPairs: true });
+
+    const rootHash = Merkletree.getRoot();
+    const adddd = keccak256(blockchain.account);
+
+    const proof = Merkletree.getHexProof(adddd);
+
+    let whitelistCost = await blockchain.smartContract.methods.whitelistCost().call();
+    let gasLimit = CONFIG.GAS_LIMIT;
+    let totalGasLimit = String(gasLimit * mintAmount);
+    let totalCostWei = String(whitelistCost * mintAmount);
+    await blockchain.smartContract.methods.whitelistMint(mintAmount, proof).send({
+      gasLimit: String(totalGasLimit),
+      to: CONFIG.CONTRACT_ADDRESS,
+      from: blockchain.account,
+      value: totalCostWei,
+    });
+    setFeedback(
+      `WOW, the ${CONFIG.NFT_NAME} is yours! go visit Opensea.io to view it.`
+    );
+  }
 
   const decrementMintAmount = () => {
     let newMintAmount = mintAmount - 1;
@@ -201,9 +293,7 @@ function App() {
         style={{ padding: 24, backgroundColor: "var(--primary)" }}
         image={CONFIG.SHOW_BACKGROUND ? "/config/images/bg.png" : null}
       >
-        <a href={CONFIG.MARKETPLACE_LINK}>
-          <StyledLogo alt={"logo"} src={"/config/images/logo.png"} />
-        </a>
+
         <s.SpacerSmall />
         <ResponsiveWrapper flex={1} style={{ padding: 24 }} test>
           <s.Container flex={1} jc={"center"} ai={"center"}>
@@ -222,6 +312,9 @@ function App() {
               boxShadow: "0px 5px 11px 2px rgba(0,0,0,0.7)",
             }}
           >
+            <a href={CONFIG.MARKETPLACE_LINK}>
+              <StyledLogo alt={"logo"} src={"/config/images/logo.png"} />
+            </a>
             <s.TextTitle
               style={{
                 textAlign: "center",
@@ -230,7 +323,7 @@ function App() {
                 color: "var(--accent-text)",
               }}
             >
-              {data.totalSupply} / {CONFIG.MAX_SUPPLY}
+              {data.totalSupply || ""}
             </s.TextTitle>
             <s.TextDescription
               style={{
@@ -302,7 +395,7 @@ function App() {
                 </s.TextDescription>
                 <s.SpacerSmall />
                 {blockchain.account === "" ||
-                blockchain.smartContract === null ? (
+                  blockchain.smartContract === null ? (
                   <s.Container ai={"center"} jc={"center"}>
                     <s.TextDescription
                       style={{
