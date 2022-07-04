@@ -323,7 +323,7 @@ function App() {
                 color: "var(--accent-text)",
               }}
             >
-              {data.totalSupply || ""}
+              {data.totalSupply || ""} {Number(data.totalSupply) > 0 ? ("Minted") : null}
             </s.TextTitle>
             <s.TextDescription
               style={{
@@ -342,13 +342,13 @@ function App() {
             >
               <StyledButton
                 onClick={(e) => {
-                  window.open("/config/roadmap.pdf", "_blank");
+                  window.open("https://discord.com", "_blank");
                 }}
                 style={{
                   margin: "5px",
                 }}
               >
-                Roadmap
+                Discord
               </StyledButton>
               <StyledButton
                 style={{
