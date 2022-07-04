@@ -1,17 +1,17 @@
 {
-  "CONTRACT_ADDRESS": "0x79d53572891D1D92E2Fd39122D5E5E4b778A85bf",
-  "SCAN_LINK": "https://rinkeby.etherscan.io/token/0x79d53572891D1D92E2Fd39122D5E5E4b778A85bf",
+  "CONTRACT_ADDRESS": "0x289b8cfCDE7D1a80D7Edf3522ffDC629136191cB",
+  "SCAN_LINK": "https://etherscan.io/token/0x289b8cfCDE7D1a80D7Edf3522ffDC629136191cB",
   "NETWORK": {
-    "NAME": "Rinkeby",
+    "NAME": "Ethereum",
     "SYMBOL": "ETH",
-    "ID": 4
+    "ID": 1
   },
   "NFT_NAME": "The squirreltology NFT",
   "SYMBOL": "SQT",
   "DISPLAY_COST": 0.04,
   "GAS_LIMIT": 285000,
   "MARKETPLACE": "Opeansea",
-  "MARKETPLACE_LINK": "https://opensea.io/collection/",
+  "MARKETPLACE_LINK": "https://opensea.io/collection/squirreltology",
   "TWITTER_LINK": "https://twitter.com/squirreltology",
   "INSTAGRAM_LINK": "https://www.instagram.com/squirreltology",
   "LINKEDIN_LINK": "https://www.linkedin.com/company/squirreltology/",
