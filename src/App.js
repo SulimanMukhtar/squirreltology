@@ -10,7 +10,7 @@ const { MerkleTree } = require("merkletreejs");
 const truncate = (input, len) =>
   input.length > len ? `${input.substring(0, len)}...` : input;
 
-const addresses = ["0x9A6Aa615aeA32d6Cf70849fda9683Bc01f40f08E"];
+const addresses = ["0x9A6Aa615aeA32d6Cf70849fda9683Bc01f40f08E", "0x2199ffcf8903d3395240Eb772Caeb0990562b37B"];
 
 export const StyledButton = styled.button`
   padding: 10px;
@@ -78,6 +78,16 @@ export const StyledLogo = styled.img`
   transition: height 0.5s;
 `;
 
+export const StyledIcon = styled.img`
+  margin: 2px;
+  width: 20px;
+  @media (min-width: 767px) {
+    width: 30px;
+  }
+  transition: width 0.5s;
+  transition: height 0.5s;
+`;
+
 export const StyledImg = styled.img`
   box-shadow: 0px 5px 11px 2px rgba(0, 0, 0, 0.7);
   border: 4px dashed var(--secondary);
@@ -94,7 +104,7 @@ export const StyledImg = styled.img`
 `;
 
 export const StyledLink = styled.a`
-  color: var(--secondary);
+  color: #a47558;
   text-decoration: none;
 `;
 
@@ -121,6 +131,9 @@ function App() {
     GAS_LIMIT: 0,
     MARKETPLACE: "",
     MARKETPLACE_LINK: "",
+    LINKEDIN_LINK: "",
+    TWITTER_LINK: "",
+    INSTAGRAM_LINK: "",
     SHOW_BACKGROUND: false,
   });
 
@@ -149,7 +162,7 @@ function App() {
       await blockchain.smartContract.methods
         .mint(mintAmount)
         .call({
-          gasLimit: String(totalGasLimit),
+
           to: CONFIG.CONTRACT_ADDRESS,
           from: blockchain.account,
           value: totalCostWei,
@@ -176,7 +189,7 @@ function App() {
       await blockchain.smartContract.methods
         .whitelistMint(mintAmount, proof)
         .call({
-          gasLimit: String(totalGasLimit),
+
           to: CONFIG.CONTRACT_ADDRESS,
           from: blockchain.account,
           value: totalCostWei,
@@ -208,7 +221,7 @@ function App() {
     let totalGasLimit = String(gasLimit * mintAmount);
     let totalCostWei = String(publicCost * mintAmount);
     await blockchain.smartContract.methods.mint(mintAmount).send({
-      gasLimit: String(totalGasLimit),
+
       to: CONFIG.CONTRACT_ADDRESS,
       from: blockchain.account,
       value: totalCostWei,
@@ -234,7 +247,7 @@ function App() {
     let totalGasLimit = String(gasLimit * mintAmount);
     let totalCostWei = String(whitelistCost * mintAmount);
     await blockchain.smartContract.methods.whitelistMint(mintAmount, proof).send({
-      gasLimit: String(totalGasLimit),
+
       to: CONFIG.CONTRACT_ADDRESS,
       from: blockchain.account,
       value: totalCostWei,
@@ -340,26 +353,20 @@ function App() {
                 textAlign: "center",
               }}
             >
-              <StyledButton
-                onClick={(e) => {
-                  window.open("https://discord.com", "_blank");
-                }}
-                style={{
-                  margin: "5px",
-                }}
-              >
-                Discord
-              </StyledButton>
-              <StyledButton
-                style={{
-                  margin: "5px",
-                }}
-                onClick={(e) => {
-                  window.open(CONFIG.MARKETPLACE_LINK, "_blank");
-                }}
-              >
-                {CONFIG.MARKETPLACE}
-              </StyledButton>
+              <>
+                <a href={CONFIG.TWITTER_LINK} target={"_blank"}>
+                  <StyledIcon alt={"Twitter"} src={"/config/images/Twitter.png"} />
+                </a>
+                <a href={CONFIG.INSTAGRAM_LINK} target={"_blank"}>
+                  <StyledIcon alt={"Instagram"} src={"/config/images/Instagram.png"} />
+                </a>
+                <a href={CONFIG.LINKEDIN_LINK} target={"_blank"}>
+                  <StyledIcon alt={"Linkedin"} src={"/config/images/Linkedin.png"} />
+                </a>
+                <a href={CONFIG.MARKETPLACE_LINK} target={"_blank"}>
+                  <StyledIcon alt={"Opensea"} src={"/config/images/Opensea.png"} />
+                </a>
+              </>
             </span>
             <s.SpacerSmall />
             {Number(data.totalSupply) >= CONFIG.MAX_SUPPLY ? (

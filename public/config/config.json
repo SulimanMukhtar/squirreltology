@@ -12,5 +12,8 @@
   "GAS_LIMIT": 285000,
   "MARKETPLACE": "Opeansea",
   "MARKETPLACE_LINK": "https://opensea.io/collection/",
+  "TWITTER_LINK": "https://twitter.com/squirreltology",
+  "INSTAGRAM_LINK": "https://www.instagram.com/squirreltology",
+  "LINKEDIN_LINK": "https://www.linkedin.com/company/squirreltology/",
   "SHOW_BACKGROUND": true
 }
